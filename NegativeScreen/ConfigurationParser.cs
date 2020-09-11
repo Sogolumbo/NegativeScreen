@@ -135,6 +135,11 @@ namespace NegativeScreen
 						// todo: handle default values for strings
 						matchingProp.SetValue(configuration, item.Value, null);
 					}
+					else if (matchingProp.PropertyType == typeof(string[]))
+					{
+						// todo: handle default values for strings[]
+						matchingProp.SetValue(configuration, item.Value.Split(','), null);
+					}
 					else if (matchingProp.PropertyType == typeof(bool))
 					{
 						if (matchingAttribute.CustomParameter is bool)
