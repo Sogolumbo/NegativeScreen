@@ -20,6 +20,7 @@ using System;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
 using System.Diagnostics;
+using System.Text;
 
 namespace NegativeScreen
 {
@@ -153,6 +154,92 @@ namespace NegativeScreen
 		[return: MarshalAs(UnmanagedType.Bool)]
 		public static extern bool UnregisterHotKey(IntPtr hWnd, int id);
 
+		/// <summary>
+		/// http://msdn.microsoft.com/en-us/library/ms633543.aspx
+		/// </summary>
+		/// <returns></returns>
+		[DllImport("user32.dll", SetLastError = true)]
+		public static extern bool SetProcessDPIAware();
+
+		/// <summary>
+		/// Undocumented function.
+		/// http://msdn.microsoft.com/en-us/library/windows/desktop/hh162714%28v=vs.85%29.aspx
+		/// </summary>
+		/// <param name="scale"></param>
+		/// <param name="x"></param>
+		/// <param name="y"></param>
+		/// <returns></returns>
+		[DllImport("user32.dll", CallingConvention = CallingConvention.StdCall, SetLastError = true)]
+		[return: MarshalAs(UnmanagedType.Bool)]
+		public static extern bool SetMagnificationDesktopMagnification(double scale, int x, int y);
+
+		/// <summary>
+		/// Undocumented function.
+		/// http://msdn.microsoft.com/en-us/library/windows/desktop/hh162710%28v=vs.85%29.aspx
+		/// </summary>
+		/// <param name="scale"></param>
+		/// <param name="x"></param>
+		/// <param name="y"></param>
+		/// <returns></returns>
+		[DllImport("user32.dll", CallingConvention = CallingConvention.StdCall, SetLastError = true)]
+		[return: MarshalAs(UnmanagedType.Bool)]
+		public static extern bool GetMagnificationDesktopMagnification(out double scale, out int x, out int y);
+
+		/// <summary>
+		/// Undocumented function.
+		/// http://msdn.microsoft.com/en-us/library/windows/desktop/hh162709%28v=vs.85%29.aspx
+		/// </summary>
+		/// <param name="pEffect"></param>
+		/// <returns></returns>
+		[DllImport("user32.dll", CallingConvention = CallingConvention.StdCall, SetLastError = true)]
+		[return: MarshalAs(UnmanagedType.Bool)]
+		public static extern bool GetMagnificationDesktopColorEffect(out ColorEffect pEffect);
+
+		/// <summary>
+		/// Undocumented function.
+		/// http://msdn.microsoft.com/en-us/library/windows/desktop/hh162713%28v=vs.85%29.aspx
+		/// </summary>
+		/// <param name="pEffect"></param>
+		/// <returns></returns>
+		[DllImport("user32.dll", CallingConvention = CallingConvention.StdCall, SetLastError = true)]
+		[return: MarshalAs(UnmanagedType.Bool)]
+		public static extern bool SetMagnificationDesktopColorEffect(ref ColorEffect pEffect);
+
+		/// <summary>
+		/// Undocumented function.
+		/// http://msdn.microsoft.com/en-us/library/windows/desktop/hh162716%28v=vs.85%29.aspx
+		/// </summary>
+		/// <param name="pEffect"></param>
+		/// <returns></returns>
+		[DllImport("user32.dll", CallingConvention = CallingConvention.StdCall, SetLastError = true)]
+		[return: MarshalAs(UnmanagedType.Bool)]
+		public static extern bool ShowSystemCursor(bool fShowCursor);
+
+		[DllImport("user32.dll", CallingConvention = CallingConvention.StdCall, SetLastError = true)]
+		[return: MarshalAs(UnmanagedType.Bool)]
+		public static extern bool SystemParametersInfo(int uiAction, int uiParam, ref int pvParam, int fWinIni);
+
+
+		public delegate bool EnumWindowsProc(IntPtr hWnd, int lParam);
+
+		[DllImport("USER32.DLL")]
+		public static extern bool EnumWindows(EnumWindowsProc enumFunc, int lParam);
+
+		[DllImport("USER32.DLL")]
+		public static extern int GetWindowText(IntPtr hWnd, StringBuilder lpString, int nMaxCount);
+
+		[DllImport("USER32.DLL")]
+		public static extern int GetWindowTextLength(IntPtr hWnd);
+
+		[DllImport("USER32.DLL")]
+		public static extern bool IsWindowVisible(IntPtr hWnd);
+
+		[DllImport("USER32.DLL")]
+		public static extern IntPtr GetShellWindow();
+
+		[DllImport("USER32.DLL")]
+		public static extern uint GetWindowThreadProcessId(IntPtr hWnd, out uint ProcessId);
+
 		#endregion
 
 		#region "Kernel32.dll"
@@ -175,6 +262,36 @@ namespace NegativeScreen
 			IsWow64Process(Process.GetCurrentProcess().Handle, out retVal);
 			return retVal;
 		}
+
+		/// <summary>
+		/// Actually useful, combined with HRESULT_FROM_WIN32() and Marshal.GetExceptionForHR().
+		/// works with undocumented functions SetMagnificationDesktopColorEffect() etc...
+		/// where other last error functions do nothing.
+		/// </summary>
+		/// <returns></returns>
+		[DllImport("kernel32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+		public static extern int GetLastError();
+
+		/// <summary>
+		/// http://msdn.microsoft.com/en-us/library/windows/desktop/ms680746%28v=vs.85%29.aspx
+		/// </summary>
+		/// <param name="x">output of GetLastError()</param>
+		/// <returns></returns>
+		public static int HRESULT_FROM_WIN32(ulong x)
+		{
+			const int FACILITY_WIN32 = 7;
+			return (int)(x) <= 0 ? (int)(x) : (int)(((x) & 0x0000FFFF) | (FACILITY_WIN32 << 16) | 0x80000000);
+		}
+
+		/// <summary>
+		/// Utility function to ease the pain of calling Marshal.GetExceptionForHR(HRESULT_FROM_WIN32((ulong)GetLastError()))...
+		/// </summary>
+		/// <returns></returns>
+		public static Exception GetExceptionForLastError()
+			=> Marshal.GetExceptionForHR(HRESULT_FROM_WIN32((ulong)GetLastError()));
+
+		[DllImport("kernel32.dll", SetLastError = true)]
+		public static extern IntPtr OpenProcess(ProcessAccessFlags processAccess, bool bInheritHandle, int processId);
 
 		#endregion
 
@@ -241,6 +358,11 @@ namespace NegativeScreen
 
 		#endregion
 
-	}
+		#region "PsApi.dll"
 
+		[DllImport("psapi.dll")]
+		public static extern uint GetProcessImageFileName(IntPtr process, StringBuilder builder, int builderCapacity);
+
+		#endregion
+	}
 }
