@@ -91,6 +91,7 @@
     <Compile Include="BuiltinMatrices.cs" />
     <Compile Include="Configuration.cs" />
     <Compile Include="ConfigurationParser.cs" />
+    <Compile Include="OpenWindowsGetter.cs" />
     <Compile Include="OverlayManager.cs">
       <SubType>Form</SubType>
     </Compile>

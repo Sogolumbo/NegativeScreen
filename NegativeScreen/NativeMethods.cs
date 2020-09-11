@@ -20,6 +20,7 @@ using System;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
 using System.Diagnostics;
+using System.Text;
 
 namespace NegativeScreen
 {
@@ -222,6 +223,28 @@ namespace NegativeScreen
 		[return: MarshalAs(UnmanagedType.Bool)]
 		public static extern bool SystemParametersInfo(int uiAction, int uiParam, ref int pvParam, int fWinIni);
 
+
+		public delegate bool EnumWindowsProc(IntPtr hWnd, int lParam);
+
+		[DllImport("USER32.DLL")]
+		public static extern bool EnumWindows(EnumWindowsProc enumFunc, int lParam);
+
+		[DllImport("USER32.DLL")]
+		public static extern int GetWindowText(IntPtr hWnd, StringBuilder lpString, int nMaxCount);
+
+		[DllImport("USER32.DLL")]
+		public static extern int GetWindowTextLength(IntPtr hWnd);
+
+		[DllImport("USER32.DLL")]
+		public static extern bool IsWindowVisible(IntPtr hWnd);
+
+		[DllImport("USER32.DLL")]
+		public static extern IntPtr GetShellWindow();
+
+		[DllImport("USER32.DLL")]
+		public static extern uint GetWindowThreadProcessId(IntPtr hWnd, out uint ProcessId);
+
+
 		#endregion
 
 		#region "Kernel32.dll"
@@ -270,6 +293,9 @@ namespace NegativeScreen
 		/// <returns></returns>
 		public static Exception GetExceptionForLastError()
 			=> Marshal.GetExceptionForHR(HRESULT_FROM_WIN32((ulong)GetLastError()));
+
+		[DllImport("kernel32.dll", SetLastError = true)]
+		public static extern IntPtr OpenProcess(ProcessAccessFlags processAccess, bool bInheritHandle, int processId);
 
 		#endregion
 
@@ -373,6 +399,13 @@ namespace NegativeScreen
 
 		[DllImport("dwmapi.dll", PreserveSig = false, SetLastError = true)]
 		public static extern bool DwmIsCompositionEnabled();
+
+		#endregion
+
+		#region "PsApi.dll"
+
+		[DllImport("psapi.dll")]
+		public static extern uint GetProcessImageFileName(IntPtr process, StringBuilder builder, int builderCapacity);
 
 		#endregion
 	}
