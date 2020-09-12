@@ -17,17 +17,17 @@
 //along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 using System;
-using System.Runtime.InteropServices;
 using System.ComponentModel;
+using System.Runtime.InteropServices;
 
 namespace NegativeScreen
 {
-	//based on http://delphi32.blogspot.com/2010/09/windows-magnification-api-net.html
+    //based on http://delphi32.blogspot.com/2010/09/windows-magnification-api-net.html
 
-	/// <summary>
-	/// Magnifier Window Styles
-	/// </summary>
-	internal enum MagnifierStyle : int
+    /// <summary>
+    /// Magnifier Window Styles
+    /// </summary>
+    internal enum MagnifierStyle : int
 	{
 		MS_SHOWMAGNIFIEDCURSOR = 0x0001,
 		MS_CLIPAROUNDCURSOR = 0x0002,
@@ -1012,4 +1012,12 @@ namespace NegativeScreen
 		Synchronize = 0x00100000
 	}
 
+    internal enum MagnifierFilterMode : uint
+    {
+        MW_FILTERMODE_EXCLUDE = 0,
+        /// <summary>
+        /// Note: This value is not supported on Windows 7 or Windows 8.
+        /// </summary>
+        MW_FILTERMODE_INCLUDE = 1,
+    }
 }

@@ -22,6 +22,11 @@ using System.Text;
 using System.Windows.Forms;
 using System.Runtime.InteropServices;
 using System.Drawing;
+using System.Linq;
+
+using HWND = System.IntPtr;
+
+using static NegativeScreen.OpenWindowGetter;
 
 namespace NegativeScreen
 {
@@ -150,7 +155,10 @@ namespace NegativeScreen
 			{
 				overlays.Add(new NegativeOverlay(item));
 			}
-			RefreshLoop(overlays);
+
+            SetNonInvertedWindows(new string[] { "\\Device\\HarddiskVolume2\\Windows\\explorer.exe" });
+
+            RefreshLoop(overlays);
 		}
 
 		private void RefreshLoop(List<NegativeOverlay> overlays)
@@ -325,6 +333,23 @@ namespace NegativeScreen
 			}
 			base.WndProc(ref m);
 		}
+
+        /// <summary>
+        /// Sets which windows will not be included in the overlays. They will be see through!
+        /// </summary>
+        /// <param name="filePaths"></param>
+        void SetNonInvertedWindows(string[] filePaths)
+        {
+            List<Window> openWindows = GetOpenWindows();
+            HWND[] NonInvertedOpenWindows = openWindows.Where(window => filePaths.Contains(window.Path)).Select(window => window.Handle).ToArray();
+            foreach(NegativeOverlay overlay in overlays)
+            {
+                if(!NativeMethods.MagSetWindowFilterList(overlay.HwndMag, MagnifierFilterMode.MW_FILTERMODE_EXCLUDE, NonInvertedOpenWindows))
+                {
+                    throw new Exception("MagSetWindowFilterList()");
+                }
+            }
+        }
 
 		protected override void Dispose(bool disposing)
 		{

@@ -336,15 +336,30 @@ namespace NegativeScreen
 		[return: MarshalAs(UnmanagedType.Bool)]
 		public static extern bool MagGetColorEffect(IntPtr hwnd, ref ColorEffect pEffect);
 
-		#endregion
+        [DllImport("Magnification.dll", CallingConvention = CallingConvention.Winapi, SetLastError = true)]
+        public static extern int MagGetWindowFilterList(IntPtr hwnd, ref MagnifierFilterMode pdwFilterMode, int count, IntPtr pHWND);
 
-		#region "DWM API"
+        [DllImport("Magnification.dll", CallingConvention = CallingConvention.Winapi, SetLastError = true)]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        public static extern bool MagSetWindowFilterList(IntPtr hwnd, MagnifierFilterMode pdwFilterMode, int count, IntPtr pHWND);
 
-		//http://msdn.microsoft.com/en-us/library/aa969540%28v=vs.85%29.aspx
+        public static bool MagSetWindowFilterList(IntPtr hwnd, MagnifierFilterMode filterMode, IntPtr[] pHWND)
+        {
+            int arraySize = Marshal.SizeOf(typeof(IntPtr)) * pHWND.Length;
+            IntPtr ptrDest = Marshal.AllocHGlobal(arraySize);
+            Marshal.Copy(pHWND, 0, ptrDest, pHWND.Length);
+            return MagSetWindowFilterList(hwnd, filterMode, pHWND.Length, ptrDest);
+        }
 
-		///ATTENTION! : program must be compiled for x64 or the call will fail!
+        #endregion
 
-		[DllImport("dwmapi.dll", PreserveSig = false)]
+        #region "DWM API"
+
+        //http://msdn.microsoft.com/en-us/library/aa969540%28v=vs.85%29.aspx
+
+        ///ATTENTION! : program must be compiled for x64 or the call will fail!
+
+        [DllImport("dwmapi.dll", PreserveSig = false)]
 		public static extern int DwmSetWindowAttribute(IntPtr hwnd, DWMWINDOWATTRIBUTE attr, ref DWMWINDOWATTRIBUTE attrValue, int attrSize);
 
 		[DllImport("dwmapi.dll", PreserveSig = false)]
